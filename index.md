@@ -3,7 +3,7 @@ layout: layout
 title: mogura software
 ---
 
-# もぐらソフトウェア
+# 繧ゅ＄繧峨た繝輔ヨ繧ｦ繧ｧ繧｢
 
 Javascript & HTML5 Games
 
