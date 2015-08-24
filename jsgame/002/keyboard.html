@@ -1,36 +1,39 @@
 <html>
+<head>
+  <meta charset="UTF-8">
+  <title>Keyboard Game</title>
+</head>
 <body>
-Space Ship Game<br>
+Keyboard Game<br>
 <canvas id="cv1" width="420px" height="210px" style="border: 1px solid black;"></canvas>
 
 <br>
 <br>
-'*'をよけて進もう！
-<br>
+一番左の文字のキーを押そう！<br>
 
 <script>
 
 var game = function() {}
 
 game.prototype = {
-  x_max: 40,
-  y_max: 20,
-  x: 20,
-  y: 18,
+  x_max: 30,
   cv1: 0,
   ctx1: 0,
   arr: 0,
+  countDown: 0,
+  frameCnt: 0,
   timerId: 0,
   score: 0,
   highScore: 0,
+  nextChar: 0,
 
   startFlg: 0,
 
-  keyLeft: 0,
-  keyUp: 0,
+  keyArr: 0,
 
   init: function() {
-    this.arr = new Array(this.x_max * this.y_max);
+    this.arr = new Array(this.x_max);
+    this.keyArr = new Array(255);
 
     var t = this;
     var kd = function(ev) { t.keydown(ev); };
@@ -40,6 +43,7 @@ game.prototype = {
 
     this.cv1 = document.getElementById('cv1');
     this.ctx1 = cv1.getContext('2d');
+    this.ctx1.font = "18px 'Sans serif'";
   },
   drawTitle: function() {
     var ctx1 = this.ctx1;
@@ -48,19 +52,16 @@ game.prototype = {
     ctx1.fillRect(0, 0, 415, 210);
 
     ctx1.fillStyle = "black";
-    ctx1.fillText("Space Ship Game", 150, 80);
-    ctx1.fillText("--- Push Enter Key ---", 150, 120);
-    ctx1.fillText("HIGH SCORE:" + this.highScore, 150, 140);
+    ctx1.fillText("Keyboard Game", 120, 80);
+    ctx1.fillText("--- Push Enter Key ---", 120, 120);
+    ctx1.fillText("HIGH SCORE:" + this.highScore, 120, 150);
   },
   drawGameOver: function() {
     var ctx1 = this.ctx1;
 
-//    ctx1.fillStyle = "white";
-//    ctx1.fillRect(0, 0, 415, 210);
-
     ctx1.fillStyle = "black";
-    ctx1.fillText("Game Over", 150, 80);
-    ctx1.fillText("--- Push Enter Key ---", 150, 120);
+    ctx1.fillText("Game Over", 120, 80);
+    ctx1.fillText("--- Push Enter Key ---", 120, 120);
   },
   fillArr: function(arr, data, n) {
     var i;
@@ -68,19 +69,25 @@ game.prototype = {
       arr[i] = data;
     }
   },
+  setNextChar: function() {
+    var s = this.arr[0];
+    this.nextChar = s.charCodeAt(0);
+    //console.log(this.nextChar);
+  },
   startGame: function() {
-    this.fillArr(this.arr, 0, this.x_max * this.y_max);
-    this.x = 20;
-    this.y = 18;
+    this.fillArr(this.arr, "A", this.x_max);
     this.score = 0;
+    this.countDown = 200;
+    this.frameCnt = 0;
 
-    this.keyLeft = 0;
-    this.keyUp = 0;
+    this.fillArr(this.keyArr, "0", 255);
 
     var t = this;
-    this.timerId = setInterval(function() { t.gameMain(); }, 50);
+    this.timerId = setInterval(function() { t.gameMain(); }, 10);
 
     this.startFlg = 1;
+
+    this.setNextChar();
   },
   stop: function() {
     clearInterval(this.timerId);
@@ -90,7 +97,7 @@ game.prototype = {
     this.drawGameOver();
   },
   keydown: function(ev) {
-    console.log("keydown:" + ev.keyCode);
+    //console.log("keydown:" + ev.keyCode);
 
     if(ev.keyCode === 13 && this.startFlg === 0) {
       this.startGame();
@@ -108,14 +115,17 @@ game.prototype = {
       this.stop();
       return;
     }
-
-    if(ev.keyCode === 37) this.keyLeft = 1;
-    if(ev.keyCode === 39) this.keyRight = 1;
+    if(ev.keyCode < 255) {
+      this.keyArr[ev.keyCode] = 1;
+      return;
+    }
   },
   keyup: function(ev) {
-    console.log("keyup:" + ev.keyCode);
-    if(ev.keyCode === 37) this.keyLeft = 0;
-    if(ev.keyCode === 39) this.keyRight = 0;
+    //console.log("keyup:" + ev.keyCode);
+    if(ev.keyCode < 255) {
+      this.keyArr[ev.keyCode] = 0;
+      return;
+    }
   },
   draw: function() {
     var ctx1 = this.ctx1;
@@ -124,8 +134,8 @@ game.prototype = {
     ctx1.fillRect(0, 0, 415, 210);
 
     ctx1.fillStyle = "black";
-    ctx1.fillText("SCORE:" + this.score, 10, 10);
-    ctx1.fillText("A", this.x * 10 + 5, this.y * 10 + 5);
+    ctx1.fillText("SCORE:" + this.score, 10, 20);
+    ctx1.fillText("TIME:" + this.countDown, 10, 40);
 
     var i;
     var arr_len = this.arr.length;
@@ -135,7 +145,7 @@ game.prototype = {
     var y = 0;
     for(i = 0; i < arr_len; i++) {
       if(arr[i] !== 0) {
-        ctx1.fillText(arr[i], x * 10 + 5, y * 10 + 5);
+        ctx1.fillText(arr[i], x * 14 + 5, 100);
       }
       x = x + 1;
       if(x === x_max) { x = 0; y = y + 1; }
@@ -143,33 +153,30 @@ game.prototype = {
   },
   scr: function() {
     var arr = this.arr;
-    var arr2 = arr.slice(0, this.x_max * (this.y_max - 1));
-    var arr3 = new Array(this.x_max);
-    this.fillArr(arr3, 0, this.x_max);
-    var arr4 = arr3.concat(arr2);
+    var arr2 = arr.slice(1, this.x_max - 1);
 
-    var rnd = Math.floor(Math.random() * (this.x_max + 1));
-    arr4[rnd] = "*";
-    this.arr = arr4;
+    var rnd = Math.floor(Math.random() * 26) + 65;
+    arr2.push(String.fromCharCode(rnd));
+    this.arr = arr2;
+    this.setNextChar();
   },
   gameMain: function() {
-    if(this.keyLeft) {
-      if(this.x > 0) this.x = this.x - 1;
-    }
-    if(this.keyRight) {
-      if(this.x < this.x_max) this.x = this.x + 1;
-    }
 
     this.draw();
 
-    if(this.arr[this.x_max * this.y + this.x] === '*') {
-      this.stop();
-      return;
+    this.frameCnt++;
+    if(this.frameCnt % 5 === 0) {
+      this.countDown--;
+      if(this.countDown < 0) {
+        this.stop();
+        return;
+      }
     }
 
-    this.scr();
-
-    this.score++;
+    if(this.keyArr[this.nextChar] == 1) {
+      this.scr();
+      this.score++;
+    }
   },
   dummy: function() {}
 }

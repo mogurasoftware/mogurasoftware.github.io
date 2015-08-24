@@ -7,4 +7,5 @@ title: mogura software
 
 Javascript & HTML5 Games
 
-[001.Space Ship](jsgame/001/spaceship.html)
+* [001.Space Ship](jsgame/001/spaceship.html)
+* [002.Keyboard](jsgame/002/keyboard.html)
