@@ -1,0 +1,297 @@
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Slot Game</title>
+</head>
+<body>
+Slot Game<br>
+<canvas id="cv1" width="420px" height="210px" style="border: 1px solid black;"></canvas>
+
+<br>
+<br>
+スロットマシン<br>
+
+<pre>
+遊び方
+一度のゲームで、10回出来ます。
+
+Enter: ゲームスタート, スロットを回す
+1-3: スロットを止める
+
+得点
+・777: 500点
+・333: 200点
+・数字が3個そろったとき: 100点
+・数字が2個そろったとき: 10点
+</pre>
+
+<script>
+
+var game = function() {}
+
+game.prototype = {
+  d1: 0,
+  d2: 0,
+  d3: 0,
+  s1: 0,
+  s2: 0,
+  s3: 0,
+  k1: 0,
+  k2: 0,
+  k3: 0,
+  cv1: 0,
+  ctx1: 0,
+  arr: 0,
+  frameCnt: 0,
+  timerId: 0,
+  score: 0,
+  gameCnt: 0,
+  highScore: 0,
+  nextChar: 0,
+
+  startFlg: 0,
+
+  keyArr: 0,
+
+  init: function() {
+    this.keyArr = new Array(255);
+
+    var t = this;
+    var kd = function(ev) { t.keydown(ev); };
+    var ku = function(ev) { t.keyup(ev); };
+    document.addEventListener("keydown", kd);
+    document.addEventListener("keyup", ku);
+
+    this.cv1 = document.getElementById('cv1');
+    this.ctx1 = cv1.getContext('2d');
+    this.ctx1.font = "18px 'Sans serif'";
+
+    this.k1 = 49; // "1" key
+    this.k2 = 50; // "2" key
+    this.k3 = 51; // "3" key
+  },
+  drawTitle: function() {
+    var ctx1 = this.ctx1;
+
+    ctx1.font = "18px 'Sans serif'";
+
+    ctx1.fillStyle = "white";
+    ctx1.fillRect(0, 0, 415, 210);
+
+    ctx1.fillStyle = "black";
+    ctx1.fillText("Slot Game", 120, 80);
+    ctx1.fillText("--- Push Enter Key ---", 120, 120);
+    ctx1.fillText("HIGH SCORE:" + this.highScore, 120, 150);
+  },
+  drawGameOver: function() {
+    var ctx1 = this.ctx1;
+
+    ctx1.font = "18px 'Sans serif'";
+
+    ctx1.fillStyle = "black";
+    ctx1.fillText("Game Over", 120, 80);
+    ctx1.fillText("--- Push Enter Key ---", 120, 120);
+  },
+  fillArr: function(arr, data, n) {
+    var i;
+    for(i = 0; i < n; i ++) {
+      arr[i] = data;
+    }
+  },
+  startGame: function() {
+    this.fillArr(this.keyArr, "0", 255);
+
+    this.score = 0;
+
+    this.frameCnt = 0;
+    this.gameCnt = 1;
+
+    this.d1 = 1;
+    this.d2 = 1;
+    this.d3 = 1;
+
+    var ctx1 = this.ctx1;
+    ctx1.font = "18px 'Sans serif'";
+    ctx1.fillStyle = "white";
+    ctx1.fillRect(0, 0, 415, 210);
+
+    this.startSlot();
+  },
+  startSlot: function() {
+    this.s1 = 0;
+    this.s2 = 0;
+    this.s3 = 0;
+
+    var t = this;
+    this.timerId = setInterval(function() { t.gameMain(); }, 10);
+    this.startFlg = 1;
+
+    this.drawScore();
+  },
+  stop: function() {
+    clearInterval(this.timerId);
+    this.timerId = 0;
+    this.startFlg = 2;
+    if(this.score > this.highScore) this.highScore = this.score;
+    this.drawGameOver();
+  },
+  keydown: function(ev) {
+    console.log("keydown:" + ev.keyCode + ":" + this.startFlg);
+
+    if(ev.keyCode === 13 && this.startFlg === 0) {
+      this.startGame();
+      return;
+    }
+    if(ev.keyCode === 13 && this.startFlg === 2) {
+      this.startFlg = 0;
+      this.drawTitle();
+      return;
+    }
+    if(ev.keyCode === 13 && this.startFlg === 3) {
+      this.startSlot();
+      return;
+    }
+
+    if(this.startFlg !== 1) return;
+
+    if(ev.keyCode === 10) {
+      this.stop();
+      return;
+    }
+    if(ev.keyCode < 255) {
+      this.keyArr[ev.keyCode] = 1;
+      return;
+    }
+  },
+  keyup: function(ev) {
+    //console.log("keyup:" + ev.keyCode);
+    if(ev.keyCode < 255) {
+      this.keyArr[ev.keyCode] = 0;
+      return;
+    }
+  },
+  drawScore: function() {
+    var ctx1 = this.ctx1;
+
+    ctx1.font = "18px 'Sans serif'";
+
+    ctx1.fillStyle = "white";
+    ctx1.fillRect(0, 0, 415, 70);
+
+    var ctx1 = this.ctx1;
+    ctx1.fillStyle = "black";
+    ctx1.fillText("SCORE:" + this.score, 10, 20);
+    ctx1.fillText("GAMES:" + this.gameCnt, 10, 40);
+  },
+  drawNumber: function(ctx1, n, x) {
+    if(n === 7) {
+      ctx1.fillStyle = "red";
+      ctx1.fillText(n, x, 110);
+    } else {
+      ctx1.fillStyle = "black";
+      ctx1.fillText(n, x, 110);
+    }
+  },
+  draw: function() {
+    var ctx1 = this.ctx1;
+
+    ctx1.font = "32px 'Sans serif'";
+
+    ctx1.fillStyle = "white";
+    ctx1.fillRect(0, 80, 415, 210);
+
+    ctx1.fillStyle = "black";
+    this.drawNumber(ctx1, this.d1, 160);
+    this.drawNumber(ctx1, this.d2, 190);
+    this.drawNumber(ctx1, this.d3, 220);
+  },
+  scr: function() {
+    if(this.s1 === 0) {
+      this.d1++;
+      if(this.d1 > 9) this.d1 = 1;
+    }
+    if(this.s2 === 0) {
+      this.d2++;
+      if(this.d2 > 9) this.d2 = 1;
+    }
+    if(this.s3 === 0) {
+      this.d3++;
+      if(this.d3 > 9) this.d3 = 1;
+    }
+  },
+  checkSlot: function() {
+    if(this.s1 === 0 || this.s2 === 0 || this.s3 === 0) return;
+
+    this.startFlg = 3;
+
+    if(this.d1 === this.d2 && this.d1 === this.d3) {
+      if(this.d1 === 7) {
+        this.score += 500;
+      } else if(this.d1 === 3) {
+        this.score += 200;
+      } else {
+        this.score += 100;
+      }
+    } else if(this.d1 === this.d2 || this.d1 === this.d3 || this.d2 === this.d3) {
+      this.score += 10;
+    }
+
+    this.drawScore();
+
+    this.gameCnt++;
+    if(this.gameCnt >= 10) {
+      this.stop();
+      return;
+    }
+
+    clearInterval(this.timerId);
+    this.timerId = 0;
+
+    this.ctx1.fillStyle = "black";
+    this.ctx1.fillText("--- Push Enter Key ---", 120, 140);
+  },
+  gameMain: function() {
+    if(this.startFlg !== 1) return;
+
+    this.draw();
+
+    this.frameCnt++;
+    if(this.frameCnt % 10 === 0) {
+      this.scr();
+    }
+
+    this.draw();
+
+    if(this.s1 === 0 && this.keyArr[this.k1] === 1) {
+      this.s1 = 1;
+      this.checkSlot();
+    } else if(this.s2 === 0 && this.keyArr[this.k2] === 1) {
+      this.s2 = 1;
+      this.checkSlot();
+    } else if(this.s3 === 0 && this.keyArr[this.k3] === 1) {
+      this.s3 = 1;
+      this.checkSlot();
+    }
+  },
+  dummy: function() {}
+}
+
+var g = new game();
+g.init();
+g.drawTitle();
+
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-66735404-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+</body>
+</html>
