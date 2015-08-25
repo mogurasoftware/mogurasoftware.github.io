@@ -239,7 +239,7 @@ game.prototype = {
     this.drawScore();
 
     this.gameCnt++;
-    if(this.gameCnt >= 10) {
+    if(this.gameCnt > 10) {
       this.stop();
       return;
     }
