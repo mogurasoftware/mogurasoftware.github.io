@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+  <title>Shooting Game</title>
+</head>
+<body>
+<h1>Shooting Game</h1>
+<canvas id="cv1" width="245px" height="415px" style="border: 1px solid black;"></canvas>
+
+<br>
+<br>
+敵をやっつけよう！<br>
+A:自機<br>
+@:敵<br>
+!:弾<br>
+<br>
+<pre>
+遊び方
+Enter: ゲームスタート
+←: 左に移動
+→: 右に移動
+X: 弾を撃つ
+</pre>
+
+<script>
+
+var game = function() {}
+
+game.prototype = {
+  x_max: 110,
+  y_max: 200,
+  x: 20,
+  y: 18,
+  cv1: 0,
+  ctx1: 0,
+  enemyMax: 10,
+  enemyArr: 0,
+  bulletMax: 3,
+  bulletArr: 0,
+  timerId: 0,
+  score: 0,
+  highScore: 0,
+
+  startFlg: 0,
+
+  keyLeft: 0,
+  keyUp: 0,
+  keyX: 0,
+
+  init: function() {
+    this.enemyArr = new Array(this.enemyMax);
+    this.bulletArr = new Array(this.bulletMax);
+
+    var t = this;
+    var kd = function(ev) { t.keydown(ev); };
+    var ku = function(ev) { t.keyup(ev); };
+    document.addEventListener("keydown", kd);
+    document.addEventListener("keyup", ku);
+
+    this.cv1 = document.getElementById('cv1');
+    this.ctx1 = cv1.getContext('2d');
+  },
+  drawTitle: function() {
+    var ctx1 = this.ctx1;
+
+    ctx1.fillStyle = "white";
+    ctx1.fillRect(0, 0, 240, 410);
+
+    ctx1.fillStyle = "black";
+    ctx1.fillText("Shooting Game", 50, 80);
+    ctx1.fillText("--- Push Enter Key ---", 50, 120);
+    ctx1.fillText("HIGH SCORE:" + this.highScore, 50, 140);
+  },
+  drawGameOver: function() {
+    var ctx1 = this.ctx1;
+
+    ctx1.fillStyle = "black";
+    ctx1.fillText("Game Over", 50, 80);
+    ctx1.fillText("--- Push Enter Key ---", 50, 120);
+  },
+  fillArr: function(arr, data, n) {
+    var i;
+    for(i = 0; i < n; i ++) {
+      arr[i] = data;
+    }
+  },
+  startGame: function() {
+    this.fillArr(this.bulletArr, 0, this.bulletMax);
+    this.fillArr(this.enemyArr, 0, this.enemyMax);
+    this.x = 40;
+    this.y = 200;
+    this.score = 0;
+
+    this.keyLeft = 0;
+    this.keyUp = 0;
+
+    var t = this;
+    this.timerId = setInterval(function() { t.gameMain(); }, 10);
+
+    this.startFlg = 1;
+  },
+  stop: function() {
+    clearInterval(this.timerId);
+    this.timerId = 0;
+    this.startFlg = 2;
+    if(this.score > this.highScore) this.highScore = this.score;
+    this.drawGameOver();
+  },
+  keydown: function(ev) {
+    //console.log("keydown:" + ev.keyCode);
+
+    if(ev.keyCode === 13 && this.startFlg === 0) {
+      this.startGame();
+      return;
+    }
+    if(ev.keyCode === 13 && this.startFlg === 2) {
+      this.startFlg = 0;
+      this.drawTitle();
+      return;
+    }
+
+    if(this.startFlg !== 1) return;
+
+    if(ev.keyCode === 27) {
+      this.stop();
+      return;
+    }
+
+    if(ev.keyCode === 37) this.keyLeft = 1;
+    if(ev.keyCode === 39) this.keyRight = 1;
+    if(ev.keyCode === 88) this.keyX = 1;
+  },
+  keyup: function(ev) {
+    //console.log("keyup:" + ev.keyCode);
+    if(ev.keyCode === 37) this.keyLeft = 0;
+    if(ev.keyCode === 39) this.keyRight = 0;
+    if(ev.keyCode === 88) this.keyX = 0;
+  },
+  drawEnemy: function(ctx1) {
+    var i;
+    var arr_max = this.enemyMax;
+    var arr = this.enemyArr;
+    for(i = 0; i < arr_max; i++) {
+      if(arr[i] !== 0) {
+        ctx1.fillText("@", arr[i]['x'] * 2 + 5, arr[i]['y'] * 2 + 5);
+      }
+    }
+  },
+  drawBullet: function(ctx1) {
+    var i;
+    var arr_max = this.bulletMax;
+    var arr = this.bulletArr;
+    for(i = 0; i < arr_max; i++) {
+      if(arr[i] !== 0) {
+        ctx1.fillText("!", arr[i]['x'] * 2 + 7, arr[i]['y'] * 2 + 5);
+      }
+    }
+  },
+  draw: function() {
+    var ctx1 = this.ctx1;
+
+    ctx1.fillStyle = "white";
+    ctx1.fillRect(0, 0, 240, 410);
+
+    ctx1.fillStyle = "black";
+    ctx1.fillText("SCORE:" + this.score, 10, 10);
+    ctx1.fillText("A", this.x * 2 + 5, this.y * 2 + 5);
+
+    this.drawBullet(ctx1);
+    this.drawEnemy(ctx1);
+  },
+  newEnemy: function() {
+    if(Math.floor(Math.random() * 12) !== 1) return;
+
+    var i;
+    var arr_max = this.enemyMax;
+    var arr = this.enemyArr;
+    for(i = 0; i < arr_max; i++) {
+      if(arr[i] === 0) {
+        var rnd = Math.floor(Math.random() * (this.x_max + 1));
+        arr[i] = { x : rnd, y : 2 };
+        return;
+      }
+    }
+  },
+  shoot: function() {
+    var i;
+    var arr_max = this.bulletMax;
+    var arr = this.bulletArr;
+    for(i = 0; i < arr_max; i++) {
+      if(arr[i] === 0) {
+        arr[i] = { x : this.x, y : this.y };
+        return;
+      }
+    }
+  },
+  enemyMain: function() {
+    var i;
+    var arr_max = this.enemyMax;
+    var arr = this.enemyArr;
+    var mx = this.x;
+    var my = this.y;
+    for(i = 0; i < arr_max; i++) {
+      if(arr[i] !== 0) {
+        arr[i]['y'] += 2;
+        if(arr[i]['y'] > this.y_max) arr[i] = 0;
+
+        var ex = arr[i]['x'];
+        var ey = arr[i]['y'];
+        if(ey - 2 < my && ey + 2 > my && ex - 2 < mx && ex + 2 > mx) {
+          this.stop();
+          return;
+        }
+      }
+    }
+  },
+  shootMain: function() {
+    var i;
+    var arr_max = this.bulletMax;
+    var arr = this.bulletArr;
+
+    var j;
+    var e_arr_max = this.enemyMax;
+    var e_arr = this.enemyArr;
+
+    for(i = 0; i < arr_max; i++) {
+      if(arr[i] !== 0) {
+        arr[i]['y'] -= 2;
+        if(arr[i]['y'] < 0) {
+          arr[i] = 0;
+        } else {
+          var bx = arr[i]['x'];
+          var by = arr[i]['y'];
+          for(j = 0; j < e_arr_max; j++) {
+            if(e_arr[j] !== 0) {
+              var ex = e_arr[j]['x'];
+              var ey = e_arr[j]['y'];
+              if(ey - 4 < by && ey + 4 > by && ex - 4 < bx && ex + 4 > bx) {
+                this.score += 100;
+                e_arr[j] = 0;
+                arr[i] = 0;
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  gameMain: function() {
+    if(this.keyLeft) {
+      if(this.x > 0) this.x = this.x - 1;
+    }
+    if(this.keyRight) {
+      if(this.x < this.x_max) this.x = this.x + 1;
+    }
+    if(this.keyX) {
+      this.shoot();
+      this.keyX = 0;
+    }
+    this.shootMain();
+    this.enemyMain();
+    this.newEnemy();
+
+    if(this.startFlg === 1) {
+      this.draw();
+    }
+  },
+  dummy: function() {}
+}
+
+var g = new game();
+g.init();
+g.drawTitle();
+
+</script>
+
+<script>
+  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+
+  ga('create', 'UA-66735404-1', 'auto');
+  ga('send', 'pageview');
+
+</script>
+
+</body>
+</html>
