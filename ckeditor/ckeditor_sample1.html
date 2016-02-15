@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>CKEditor</title>
+        <script src="http://cdn.ckeditor.com/4.5.7/standard/ckeditor.js"></script>
+    </head>
+    <body>
+        <form action="javascript:submit_func();">
+          <textarea name="editor1" id="e1"></textarea>
+          <input type="submit" value="submit" />
+          (Submitボタンで、下のtextareaに編集結果のHTMLを表示します)
+        </form>
+
+        <textarea name="editor2" id="e2" cols="100" rows="10"></textarea>
+
+        <script>
+            function submit_func() {
+              var e1 = document.getElementById('e1');
+              e2.value = e1.value;
+            }
+
+            CKEDITOR.replace( 'editor1' );
+        </script>
+    </body>
+</html>

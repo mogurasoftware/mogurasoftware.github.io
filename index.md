@@ -14,4 +14,5 @@ title: mogura software
 
 ## CKEditor
 
+* [CKEditorチュートリアル (CDNを使う場合)](ckeditor/ckeditor_tutorial_cdi.html)
 * [CKEditorをソースコードからビルドする](ckeditor/ckeditor_build.html)
